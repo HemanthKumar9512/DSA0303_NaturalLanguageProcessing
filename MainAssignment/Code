@@ -1,0 +1,60 @@
+import json
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+d = json.load(open("evaluation_results.json"))
+
+# Chart 1: IR approach comparison (accuracy/precision/recall/F1)
+ir = d["ir_evaluation"]
+labels = ["Accuracy", "Precision", "Recall", "F1-score"]
+tfidf_vals = [ir["tfidf"]["accuracy"], ir["tfidf"]["precision"], ir["tfidf"]["recall"], ir["tfidf"]["f1"]]
+sem_vals = [ir["semantic"]["accuracy"], ir["semantic"]["precision"], ir["semantic"]["recall"], ir["semantic"]["f1"]]
+
+x = range(len(labels))
+width = 0.35
+fig, ax = plt.subplots(figsize=(7, 4.2))
+ax.bar([i - width/2 for i in x], tfidf_vals, width, label="TF-IDF (keyword-based)", color="#4C72B0")
+ax.bar([i + width/2 for i in x], sem_vals, width, label="Synonym-expansion (semantic)", color="#DD8452")
+ax.set_xticks(list(x))
+ax.set_xticklabels(labels)
+ax.set_ylim(0, 1.15)
+ax.set_ylabel("Score")
+ax.set_title("Information Retrieval: TF-IDF vs Semantic-Expansion Approach")
+ax.legend(loc="lower right")
+for i, v in enumerate(tfidf_vals):
+    ax.text(i - width/2, v + 0.02, f"{v:.2f}", ha="center", fontsize=8)
+for i, v in enumerate(sem_vals):
+    ax.text(i + width/2, v + 0.02, f"{v:.2f}", ha="center", fontsize=8)
+plt.tight_layout()
+plt.savefig("chart_ir_comparison.png", dpi=150)
+plt.close()
+
+# Chart 2: WSD approach comparison
+wsd = d["wsd_evaluation"]
+fig, ax = plt.subplots(figsize=(5.5, 4))
+approaches = ["Rule-based\n(Most Frequent Sense)", "Simplified Lesk\n(context overlap)"]
+accs = [wsd["rule"]["accuracy"], wsd["lesk"]["accuracy"]]
+bars = ax.bar(approaches, accs, color=["#4C72B0", "#DD8452"], width=0.5)
+ax.set_ylim(0, 1.15)
+ax.set_ylabel("Accuracy")
+ax.set_title("Word Sense Disambiguation: Rule-based vs Simplified Lesk")
+for b, v in zip(bars, accs):
+    ax.text(b.get_x() + b.get_width()/2, v + 0.02, f"{v:.2f}", ha="center", fontsize=10)
+plt.tight_layout()
+plt.savefig("chart_wsd_comparison.png", dpi=150)
+plt.close()
+
+# Chart 3: Latency comparison
+fig, ax = plt.subplots(figsize=(5.5, 4))
+lat = [ir["tfidf"]["avg_latency_ms"], ir["semantic"]["avg_latency_ms"]]
+bars = ax.bar(["TF-IDF", "Semantic-expansion"], lat, color=["#4C72B0", "#DD8452"], width=0.5)
+ax.set_ylabel("Average latency (ms)")
+ax.set_title("Retrieval Latency Comparison")
+for b, v in zip(bars, lat):
+    ax.text(b.get_x() + b.get_width()/2, v + 0.01, f"{v:.3f} ms", ha="center", fontsize=10)
+plt.tight_layout()
+plt.savefig("chart_latency.png", dpi=150)
+plt.close()
+
+print("Charts saved.")
